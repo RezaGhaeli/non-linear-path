@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="The Non-Linear Path of an Engineer: an animated talk for students by Reza Ghaeli, P.Eng.">
+<meta name="author" content="Reza Ghaeli">
+<title>The Non-Linear Path of an Engineer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one cinematic 16:9 stage, letterboxed over a blurred copy of the scene; captions ride the lower-left edge. */
+:root {
+  --night: #07080d;
+  --ink: #f4f1ff;
+  --ink-dim: #b9b6cc;
+  --line: rgba(255,255,255,.18);
+  --accent: #ffb547;
+  --display: "Zen Kaku Gothic New", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --doc-bg: #090b10;
+  --doc-cyan: #38d8ff;
+  --hud-panel: #0f141d;
+  --hud-line: #223042;
+  --hud-ink: #e8eef7;
+  --hud-dim: #8b97a8;
+  --hud-amber: #ffc23d;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--night); color: var(--ink); overflow: hidden; font-family: var(--display); }
+
+.stage { position: fixed; inset: 0; container-type: size; overflow: hidden; overflow: clip; background: var(--night); }
+.slide { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; pointer-events: none; will-change: transform, opacity, filter; }
+.slide.on { opacity: 1; }
+.backdrop { position: absolute; inset: -8%; background-size: cover; background-position: center; filter: brightness(.45) saturate(1.2); }
+.frame { position: relative; width: min(100cqw, 100cqh * 1376 / 768); aspect-ratio: 1376 / 768; max-width: 100%; overflow: hidden; overflow: clip; }
+.kb { position: absolute; inset: 0; }
+.slide.on .kb { animation: kb 16s ease-in-out infinite alternate; }
+@keyframes kb { from { transform: scale(1); } to { transform: scale(1.07); } }
+.kb img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+.kb canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.vignette { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(4,5,10,.55) 100%),
+              linear-gradient(to top, rgba(4,5,10,.82) 0%, rgba(4,5,10,.35) 26%, transparent 46%); }
+
+/* Detail slides: the HUD deck pages, shown whole on their own dark ground */
+.slide.doc .backdrop { inset: 0; filter: none; background: radial-gradient(70% 60% at 50% 50%, #0f1622 0%, var(--doc-bg) 70%); }
+.slide.doc .frame { width: min(100cqw, 100cqh * 16 / 9); aspect-ratio: 16 / 9; }
+.slide.doc.on .kb { animation: none; }
+.scan { position: absolute; left: 0; right: 0; top: 0; height: 3px; opacity: 0; pointer-events: none;
+  background: var(--doc-cyan); box-shadow: 0 0 18px 4px var(--doc-cyan), 0 0 60px 10px rgba(56,216,255,.35); }
+.caption { transition: opacity .5s; }
+.caption.away { opacity: 0; }
+.progress button.sub::after { height: 2px; opacity: .7; }
+
+/* HUD pages: laid out on a 1600×900 grid; --u is one grid unit at the frame's current size */
+.slide.doc .frame { container-type: inline-size; }
+.hud { --u: calc(100cqw / 1600); position: absolute; inset: 0; color: var(--hud-ink); font-family: "IBM Plex Sans", system-ui, sans-serif; }
+.hud-top, .hud-bottom { position: absolute; left: calc(80 * var(--u)); right: calc(80 * var(--u)); display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--mono); letter-spacing: .04em; color: var(--hud-dim); font-size: calc(15 * var(--u)); }
+.hud-top { top: calc(28 * var(--u)); height: calc(38 * var(--u)); border-bottom: 1px solid var(--hud-line); }
+.hud-top .path::before { content: ""; display: inline-block; width: calc(9 * var(--u)); height: calc(9 * var(--u)); border-radius: 50%; background: var(--doc-cyan); margin-right: calc(14 * var(--u)); }
+.hud-top .tag { color: var(--doc-cyan); border: 1px solid currentColor; border-radius: calc(4 * var(--u)); padding: calc(3 * var(--u)) calc(8 * var(--u)); font-size: calc(13 * var(--u)); }
+.hud-bottom { top: calc(834 * var(--u)); padding-top: calc(16 * var(--u)); border-top: 1px solid var(--hud-line); }
+.hud-bottom .arrow { color: var(--doc-cyan); font-size: calc(26 * var(--u)); }
+.hud-rule { position: absolute; left: calc(767 * var(--u)); top: calc(94 * var(--u)); height: calc(712 * var(--u)); border-left: 1px dashed var(--hud-line); }
+.hud-left { position: absolute; left: calc(80 * var(--u)); top: calc(96 * var(--u)); width: calc(654 * var(--u)); height: calc(712 * var(--u));
+  display: flex; flex-direction: column; gap: calc(22 * var(--u)); }
+.chip { align-self: flex-start; font-family: var(--mono); font-size: calc(15 * var(--u)); letter-spacing: .06em; color: var(--doc-cyan);
+  border: 1px solid var(--hud-line); background: var(--hud-panel); border-radius: calc(4 * var(--u)); padding: calc(7 * var(--u)) calc(14 * var(--u)); }
+.hud h2 { margin: 0; font-family: var(--mono); font-weight: 600; font-size: calc(50 * var(--u)); line-height: 1.12; color: #8fe9ff; text-wrap: balance; }
+.hud .sub { margin: 0; font-size: calc(23 * var(--u)); line-height: 1.35; color: var(--hud-ink); }
+.fact { border: 1px solid var(--hud-line); background: var(--hud-panel); border-radius: calc(6 * var(--u)); padding: calc(22 * var(--u)) calc(26 * var(--u));
+  display: grid; gap: calc(8 * var(--u)); }
+.fact b { font-family: var(--mono); font-weight: 600; font-size: calc(64 * var(--u)); line-height: 1; color: var(--doc-cyan); }
+.fact b.words { font-size: calc(34 * var(--u)); line-height: 1.15; }
+.fact p { margin: 0; font-size: calc(21 * var(--u)); line-height: 1.4; }
+.fact .mono { font-family: var(--mono); font-size: calc(16 * var(--u)); color: var(--hud-amber); letter-spacing: .03em; }
+.uses { display: grid; gap: calc(12 * var(--u)); }
+.uses div { display: grid; grid-template-columns: calc(150 * var(--u)) 1fr; gap: calc(16 * var(--u)); align-items: baseline;
+  font-size: calc(20 * var(--u)); line-height: 1.35; border-left: calc(3 * var(--u)) solid var(--doc-cyan); padding-left: calc(16 * var(--u)); }
+.uses span { font-family: var(--mono); font-size: calc(15 * var(--u)); color: var(--doc-cyan); letter-spacing: .05em; }
+.quote { margin: 0; border-left: calc(4 * var(--u)) solid var(--doc-cyan); background: var(--hud-panel); padding: calc(22 * var(--u)) calc(26 * var(--u));
+  font-size: calc(27 * var(--u)); line-height: 1.35; font-style: italic; }
+.quote cite { display: block; margin-top: calc(12 * var(--u)); font-family: var(--mono); font-style: normal; font-size: calc(15 * var(--u)); color: var(--hud-amber); letter-spacing: .05em; }
+.hud .note { margin: 0; font-size: calc(19 * var(--u)); line-height: 1.4; color: var(--hud-dim); }
+.hud .note strong { color: var(--hud-ink); font-weight: 500; }
+.takeaway { margin-top: auto; border: 1px solid var(--hud-amber); background: rgba(255,194,61,.07); border-radius: calc(6 * var(--u)); padding: calc(18 * var(--u)) calc(24 * var(--u));
+  font-size: calc(26 * var(--u)); line-height: 1.3; font-weight: 500; color: #fff3d1; }
+.takeaway span { display: block; font-family: var(--mono); font-size: calc(14 * var(--u)); letter-spacing: .14em; color: var(--hud-amber); margin-bottom: calc(6 * var(--u)); font-weight: 400; }
+.hud .panel { position: absolute; border: 1px solid var(--hud-line); background: var(--hud-panel); border-radius: calc(8 * var(--u)); }
+.hud .crop { position: absolute; display: block; max-width: none; right: auto; bottom: auto; height: auto; }
+.tiles { position: absolute; left: calc(800 * var(--u)); top: calc(96 * var(--u)); width: calc(721 * var(--u)); height: calc(292 * var(--u));
+  display: grid; grid-template-columns: 1fr 1fr; gap: calc(12 * var(--u)); }
+.tiles div { border: 1px solid var(--hud-line); background: var(--hud-panel); border-radius: calc(6 * var(--u)); padding: calc(16 * var(--u)) calc(20 * var(--u));
+  display: grid; align-content: start; gap: calc(6 * var(--u)); font-size: calc(18 * var(--u)); line-height: 1.35; }
+.tiles span { font-family: var(--mono); font-size: calc(16 * var(--u)); letter-spacing: .06em; color: var(--hud-amber); }
+
+/* Scene lesson line under each title */
+.lesson { margin: 0; font-size: clamp(15px, 1.55cqw, 22px); font-weight: 500; color: #e9e4ff; text-shadow: 0 2px 14px rgba(0,0,0,.7); max-width: 46ch; }
+.lesson::before { content: "→ "; color: var(--accent); }
+.caption.in .lesson { animation: rise .8s 1.1s both cubic-bezier(.2,.7,.2,1); }
+
+/* Caption */
+.caption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; pointer-events: none;
+  padding-left: max(clamp(16px, 4cqw, 56px), env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(clamp(64px, 9cqh, 96px) + env(safe-area-inset-bottom, 0px));
+  display: grid; gap: 10px; max-width: min(92cqw, 980px); }
+.kicker { font-family: var(--mono); font-size: clamp(11px, 1.1cqw, 14px); letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
+  display: flex; align-items: center; gap: 12px; }
+.kicker::before { content: ""; width: 34px; height: 2px; background: currentColor; box-shadow: 0 0 10px currentColor; }
+.title { margin: 0; font-weight: 900; font-size: clamp(28px, 4.4cqw, 66px); line-height: 1.06; letter-spacing: -.01em; text-wrap: balance;
+  text-shadow: 0 2px 24px rgba(0,0,0,.6), 0 0 2px rgba(0,0,0,.4); }
+.title .w { display: inline-block; }
+.caption.in .kicker { animation: rise .7s .15s both cubic-bezier(.2,.7,.2,1); }
+.caption.in .title .w { animation: rise .8s both cubic-bezier(.2,.7,.2,1); animation-delay: calc(.3s + var(--i) * 70ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+
+/* Progress + controls */
+.progress { position: absolute; z-index: 6; top: calc(14px + env(safe-area-inset-top, 0px));
+  left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; }
+.progress button { height: 18px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; align-items: center; }
+.progress button::after { content: ""; height: 3px; border-radius: 2px; background: var(--line); transition: background .4s, box-shadow .4s; }
+.progress button.done::after { background: rgba(255,255,255,.55); }
+.progress button.cur::after { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+
+.controls { position: absolute; z-index: 6; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13px; color: var(--ink-dim); }
+.controls button { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: rgba(10,12,20,.55); color: var(--ink);
+  backdrop-filter: blur(8px); cursor: pointer; display: grid; place-items: center; transition: border-color .2s, background .2s; }
+.controls button:hover { border-color: var(--accent); background: rgba(20,22,34,.75); }
+.controls button:focus-visible, .progress button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.controls button:disabled { opacity: .35; cursor: default; }
+.controls svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.count { min-width: 52px; text-align: center; font-variant-numeric: tabular-nums; }
+.count b { color: var(--ink); font-weight: 500; }
+.hint { position: absolute; z-index: 6; bottom: calc(26px + env(safe-area-inset-bottom, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  font-family: var(--mono); font-size: 12px; color: var(--ink-dim); letter-spacing: .06em; transition: opacity .6s; }
+.hint kbd { font-family: inherit; border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; color: var(--ink); }
+.hint.gone { opacity: 0; }
+.credit { margin-right: 8px; font-size: 11px; letter-spacing: .06em; color: var(--ink-dim); text-decoration: none; opacity: .75; }
+.credit:hover, .credit:focus-visible { color: var(--ink); opacity: 1; }
+.credit b { font-weight: 500; color: var(--ink); }
+@media (max-width: 600px) { .hint { display: none; } .credit { position: fixed; top: calc(38px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); margin: 0; font-size: 11px; } }
+@media (prefers-reduced-motion: reduce) { .slide.on .kb { animation: none; } }
+</style>
+
+<main class="stage" id="stage" aria-roledescription="slideshow" aria-label="The Non-Linear Path of an Engineer">
+  <div class="caption" id="caption" aria-live="polite">
+    <div class="kicker" id="kicker"></div>
+    <h1 class="title" id="title"></h1>
+    <p class="lesson" id="lesson"></p>
+  </div>
+  <nav class="progress" id="progress" aria-label="Slides"></nav>
+  <div class="hint" id="hint">Press <kbd>→</kbd> or <kbd>space</kbd> to move forward</div>
+  <div class="controls">
+    <a class="credit" href="https://github.com/RezaGhaeli" target="_blank" rel="noopener">Created by <b>Reza Ghaeli</b></a>
+    <button id="prev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <span class="count" id="count"></span>
+    <button id="next" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button id="fs" aria-label="Full screen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</main>
+
+<script>
+const W = 1376, H = 768;
+const SLIDES = [
+  { img: "img/1.webp?v=10", fx: 0, kicker: "Age 13 · The spark", title: "The Path of an Engineer", lesson: "It starts with one question: what happens if…?", accent: "#ffb547", portal: [0.6, 0.68] },
+  { img: "img/1b.webp?v=10", fx: 1, kicker: "Age 13 · The detour", title: "The Non-Linear Path of an Engineer", lesson: "Failure is just data you didn't have yet.", accent: "#ff8a4c", portal: [0.7, 0.66] },
+  { img: "img/2.webp?v=10", fx: 2, kicker: "His 20s · Structural engineer", title: "A Structural Engineer Who Coded on a Game Console", lesson: "Use the tools you have, not the ones you wish you had.", accent: "#6cffc9", portal: [0.245, 0.42] },
+  { img: "img/3.webp?v=10", fx: 3, kicker: "Late 20s · The high-tech pivot", title: "Transportation Systems & Technology", lesson: "Curiosity is a career plan.", accent: "#4fd8ff", portal: [0.555, 0.53] },
+  { img: "img/4.webp?v=10", fx: 4, kicker: "His 30s · Transportation economist & data scientist", title: "Reading the Road in Numbers: Data Science at ICBC", lesson: "Behind every data point is a person on the road.", accent: "#ffa98a", portal: [0.84, 0.43] },
+  { doc: "icbc", hud: 0, title: "Engineering at Scale: ICBC Data Science", accent: "#38d8ff", portal: [0.72, 0.4] },
+  { img: "img/5.webp?v=10", fx: 5, kicker: "His 40s · Computer Science instructor", title: "Teaching Software Development and Data Science at Douglas College", lesson: "Teaching is learning twice.", accent: "#ffc98a", portal: [0.8, 0.3] },
+  { doc: "games", hud: 2, title: "Games Aren't Just Games", accent: "#38d8ff", portal: [0.72, 0.68] },
+  { img: "img/6.webp?v=10", fx: 6, kicker: "His 40s · Ongoing · InfraLogics & AI", title: "AI and IoT Meet Engineering at InfraLogics", lesson: "Nothing you learn is wasted. It becomes your edge.", accent: "#9fb6ff", portal: [0.46, 0.62] },
+  { doc: "pinn", hud: 1, title: "InfraLogics & The Physics of AI", accent: "#38d8ff", portal: [0.72, 0.36] },
+  { doc: "peng", hud: 3, title: "The P.Eng Designation", accent: "#ffc23d", portal: [0.725, 0.34] },
+  { img: "img/7.webp?v=10", fx: 7, kicker: "The future · Passing it on", title: "Building the Builders: The Next Generation", lesson: "Build the builders who come after you.", accent: "#ff9d5c", portal: [0.58, 0.6] },
+];
+
+/* HUD page content: editable text over diagram panels cut from the original deck (positions in 1600×900 units) */
+const u = n => `calc(${n} * var(--u))`;
+const crop = (src, x, y, w) => `<img class="crop" src="img/detail/${src}.webp" alt="" style="left:${u(x)};top:${u(y)};width:${u(w)}">`;
+const panel = (x, y, w, h) => `<div class="panel" style="left:${u(x)};top:${u(y)};width:${u(w)};height:${u(h)}"></div>`;
+const page = o => `<div class="hud">
+  <div class="hud-top"><span class="path">${o.path}</span><span class="tag">${o.tag}</span></div>
+  <div class="hud-rule"></div>
+  <div class="hud-left">
+    <div class="chip">${o.chip}</div>
+    <h2>${o.title}</h2>
+    <p class="sub">${o.sub}</p>
+    ${o.body}
+    <div class="takeaway"><span>TAKEAWAY</span>${o.takeaway}</div>
+  </div>
+  ${o.right}
+  <div class="hud-bottom"><span>${o.section}</span></div>
+</div>`;
+const DOCS = {
+  icbc: page({
+    path: "SYS_ARCH // ICBC_RISK_ECOSYSTEM // TELEMETRY_STREAM", tag: "ONLINE // PROD-01",
+    chip: "INFRASTRUCTURE // ICBC DATA SCIENCE",
+    title: "Engineering at Scale",
+    sub: "The same structured thinking that designs a beam can model a whole province on the move.",
+    body: `<div class="fact"><b class="words">Every vehicle in British Columbia</b>
+      <p>is insured by one public insurer, ICBC. Every claim and every crash becomes data that can make roads safer.</p></div>`,
+    takeaway: "Your skills travel further than your job title.",
+    right: panel(800, 106, 721, 600) + crop("icbc", 826, 133, 668),
+    section: "SECTION: ENGINEERING AT SCALE // ICBC DATA SCIENCE",
+  }),
+  games: page({
+    path: "SYS_ARCH // REAL_TIME_ENGINES // SIMULATION", tag: "ENGINE // LIVE",
+    chip: "GAME ENGINES // THE REAL WORLD",
+    title: "Games Aren't Just Games",
+    sub: "The engines and skills you're learning here build much more than games.",
+    body: `<div class="fact"><b class="words">Same physics. Different stakes.</b>
+      <p>The laws of motion that move a character in Unreal also move a truck across a bridge in an engineering simulation.</p></div>
+      <p class="note"><strong>Next on my own path:</strong> learning Unreal Engine to bring my InfraLogics road model to life.</p>`,
+    takeaway: "The skills you're learning here can build the real world.",
+    right: `<div class="tiles">
+        <div><span>VIRTUAL PRODUCTION</span>Film and TV shot inside real-time game engines</div>
+        <div><span>ARCHITECTURE</span>Walk through a building before it is built</div>
+        <div><span>DIGITAL TWINS</span>Live 3D copies of roads, bridges and cities</div>
+        <div><span>TRAINING & AR</span>Practise risky work safely, then overlay it on site</div>
+      </div>` + crop("mesh", 798, 414, 725),
+    section: "SECTION: GAMES // SIMULATION // INFRASTRUCTURE",
+  }),
+  pinn: page({
+    path: "SYS_ARCH // INFRALOGICS_LAB // PINN_PHYSICS_VALIDATION", tag: "GOVERNED_MODEL // RT-04",
+    chip: "CORE FORMULATION // INFRALOGICS",
+    title: "The Physics of AI",
+    sub: "Ordinary AI guesses from data. Physics-informed neural networks also have to obey the laws of physics.",
+    body: `<div class="fact"><b>10,000×</b>
+      <p>One heavy truck axle can do as much road damage as 10,000 passenger cars.</p>
+      <span class="mono">FOURTH POWER LAW // DAMAGE ∝ (AXLE LOAD)⁴</span></div>`,
+    takeaway: "Learn the rules deeply. That's how you bend them.",
+    right: crop("pinn", 811, 91 + 138, 712),
+    section: "SECTION: CYBER-PHYSICAL SYSTEMS // PHYSICS-INFORMED AI",
+  }),
+  peng: page({
+    path: "SYS_ARCH // EGBC_PENG_SPEC // GOVERNANCE_FRAMEWORK", tag: "STATUTORY VERIFIED",
+    chip: "REGULATORY GOVERNANCE // EGBC",
+    title: "The P.Eng Designation",
+    sub: "A licence that says: people can trust what you build.",
+    body: `<blockquote class="quote">“Hold paramount the safety, health and welfare of the public.”<cite>EGBC CODE OF ETHICS // PRINCIPLE 1</cite></blockquote>
+      <p class="note">It applies whether you pour concrete, train a neural network or ship software that millions of people use.</p>`,
+    takeaway: "Whatever you build, someone will trust it.",
+    right: panel(800, 97 + 131, 721, 446) + crop("seal", 826, 110 + 131, 668),
+    section: "SECTION: PROFESSIONAL ETHICS // PUBLIC TRUST",
+  }),
+};
+const DW = 1600, DH = 900;
+const dims = sl => sl.doc ? [DW, DH] : [W, H];
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const rand = (a, b) => a + Math.random() * (b - a);
+const TAU = Math.PI * 2;
+
+/* ---------- ambient effects, drawn in image pixels (1376×768) ---------- */
+function glow(ctx, x, y, r, color, a) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, color.replace("A", a)); g.addColorStop(1, color.replace("A", 0));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+}
+function twinklers(n, x0, x1, y0, y1) {
+  return Array.from({ length: n }, () => ({ x: rand(x0, x1), y: rand(y0, y1), p: rand(0, TAU), s: rand(.6, 1.8), r: rand(.8, 2.2) }));
+}
+function drift(n, x0, x1, y0, y1, v) {
+  return Array.from({ length: n }, () => ({ x: rand(x0, x1), y: rand(y0, y1), vx: rand(-v, v), vy: rand(-v, v * .3), p: rand(0, TAU), r: rand(1, 3) }));
+}
+function moveDrift(list, dt, x0, x1, y0, y1) {
+  for (const m of list) {
+    m.x += m.vx * dt; m.y += m.vy * dt;
+    if (m.x < x0) m.x = x1; if (m.x > x1) m.x = x0; if (m.y < y0) m.y = y1; if (m.y > y1) m.y = y0;
+  }
+}
+function scanBand(ctx, t, x, y, w, h, color, speed, alpha) {
+  const by = y + ((t * speed) % (h + 120)) - 60;
+  const g = ctx.createLinearGradient(0, by - 50, 0, by + 50);
+  g.addColorStop(0, color.replace("A", 0)); g.addColorStop(.5, color.replace("A", alpha)); g.addColorStop(1, color.replace("A", 0));
+  ctx.fillStyle = g; ctx.fillRect(x, by - 50, w, 100);
+}
+function ring(ctx, x, y, phase, color) {
+  const k = phase % 1, r = 8 + k * 34;
+  ctx.strokeStyle = color.replace("A", (1 - k) * .75); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();
+}
+
+const EFFECTS = [
+  // 1 · backyard launch: nozzle flame flicker, exhaust and ground smoke billowing, sparks spraying, dust in the sunbeams
+  {
+    init() { return { puffs: [], embers: [], motes: drift(46, 330, 820, 0, 480, 9), acc: 0, eacc: 0 }; },
+    draw(ctx, s, t, dt) {
+      ctx.globalCompositeOperation = "lighter";
+      moveDrift(s.motes, dt, 330, 820, 0, 480);
+      for (const m of s.motes) glow(ctx, m.x, m.y, m.r * 3, "rgba(255,226,150,A)", .35 + .3 * Math.sin(t * 1.4 + m.p));
+      const fl = .6 + .4 * Math.sin(t * 31) * Math.sin(t * 17);
+      glow(ctx, 866, 398, 90, "rgba(255,190,90,A)", .25 + .2 * fl);
+      glow(ctx, 866, 398, 26, "rgba(255,245,210,A)", .55 + .35 * fl);
+      ctx.globalCompositeOperation = "source-over";
+      s.acc += dt;
+      while (s.acc > .16) {
+        s.acc -= .16;
+        if (Math.random() < .35) { const k = Math.random(); s.puffs.push({ x: 860 - k * 110 + rand(-15, 15), y: 420 + k * 150, r: rand(25, 45), vx: rand(-8, 8), vy: rand(-4, 6), life: 0, max: rand(3, 5) }); }
+        else s.puffs.push({ x: rand(330, 1100), y: rand(570, 700), r: rand(45, 90), vx: rand(-10, 10), vy: rand(-12, -3), life: 0, max: rand(5, 8) });
+      }
+      s.puffs = s.puffs.filter(p => (p.life += dt) < p.max);
+      for (const p of s.puffs) {
+        p.x += p.vx * dt; p.y += p.vy * dt; p.r += 9 * dt;
+        glow(ctx, p.x, p.y, p.r, "rgba(244,238,228,A)", .2 * Math.sin(Math.PI * p.life / p.max));
+      }
+      ctx.globalCompositeOperation = "lighter";
+      s.eacc += dt;
+      while (s.eacc > .03) { s.eacc -= .03; s.embers.push({ x: 866 + rand(-8, 8), y: 400 + rand(-6, 6), vx: rand(-150, 50), vy: rand(30, 170), p: rand(0, TAU), life: 0, max: rand(.5, 1.2) }); }
+      s.embers = s.embers.filter(e => (e.life += dt) < e.max);
+      for (const e of s.embers) {
+        e.vy += 120 * dt; e.x += e.vx * dt; e.y += e.vy * dt;
+        const a = (1 - e.life / e.max) * (.7 + .3 * Math.sin(t * 20 + e.p));
+        glow(ctx, e.x, e.y, 7, "rgba(255,150,50,A)", a * .5);
+        ctx.fillStyle = `rgba(255,214,140,${a})`; ctx.fillRect(e.x - 1, e.y - 1, 2.2, 2.2);
+      }
+    },
+  },
+  // 2 · backyard crash: sparks bursting from the box, tail flame flicker, smoke billowing on both sides, dust in the sunbeams
+  {
+    init() { return { puffs: [], sparks: [], motes: drift(40, 300, 850, 0, 420, 9), acc: 0, sacc: 0 }; },
+    draw(ctx, s, t, dt) {
+      ctx.globalCompositeOperation = "lighter";
+      moveDrift(s.motes, dt, 300, 850, 0, 420);
+      for (const m of s.motes) glow(ctx, m.x, m.y, m.r * 3, "rgba(255,226,150,A)", .35 + .3 * Math.sin(t * 1.4 + m.p));
+      ctx.globalCompositeOperation = "source-over";
+      s.acc += dt;
+      while (s.acc > .18) {
+        s.acc -= .18;
+        const left = Math.random() < .5;
+        s.puffs.push({ x: left ? rand(640, 920) : rand(1060, 1300), y: rand(360, 630), r: rand(40, 80), vx: left ? rand(-12, 0) : rand(0, 12), vy: rand(-12, -3), life: 0, max: rand(4, 7) });
+      }
+      s.puffs = s.puffs.filter(p => (p.life += dt) < p.max);
+      for (const p of s.puffs) {
+        p.x += p.vx * dt; p.y += p.vy * dt; p.r += 8 * dt;
+        glow(ctx, p.x, p.y, p.r, "rgba(244,238,228,A)", .18 * Math.sin(Math.PI * p.life / p.max));
+      }
+      ctx.globalCompositeOperation = "lighter";
+      const boom = Math.pow(Math.max(0, Math.sin(t * 2.6)), 6);
+      glow(ctx, 962, 540, 170, "rgba(255,190,90,A)", .12 + .3 * boom);
+      glow(ctx, 962, 540, 40, "rgba(255,245,210,A)", .4 + .4 * boom);
+      const fl = .6 + .4 * Math.sin(t * 29) * Math.sin(t * 13);
+      glow(ctx, 1066, 368, 60, "rgba(255,180,80,A)", .25 + .2 * fl);
+      glow(ctx, 1066, 368, 18, "rgba(255,245,210,A)", .5 + .3 * fl);
+      s.sacc += dt * (1 + 3 * boom);
+      while (s.sacc > .025) {
+        s.sacc -= .025;
+        const a = rand(-Math.PI * .95, -Math.PI * .05), v = rand(120, 320);
+        s.sparks.push({ x: 962 + rand(-20, 20), y: 545, vx: Math.cos(a) * v, vy: Math.sin(a) * v, p: rand(0, TAU), life: 0, max: rand(.4, 1) });
+      }
+      s.sparks = s.sparks.filter(k => (k.life += dt) < k.max);
+      for (const k of s.sparks) {
+        k.vy += 260 * dt; k.x += k.vx * dt; k.y += k.vy * dt;
+        const a = (1 - k.life / k.max) * (.7 + .3 * Math.sin(t * 20 + k.p));
+        glow(ctx, k.x, k.y, 6, "rgba(255,150,50,A)", a * .5);
+        ctx.fillStyle = `rgba(255,220,150,${a})`; ctx.fillRect(k.x - 1, k.y - 1, 2.2, 2.2);
+      }
+    },
+  },
+  // 3 · bedroom: CRT scanlines and flicker, cursor, glow on his face, city lights outside
+  {
+    init() { return { lights: twinklers(16, 1090, 1325, 150, 300), motes: drift(26, 260, 720, 140, 470, 6) }; },
+    draw(ctx, s, t, dt) {
+      const flick = .5 + .5 * Math.sin(t * 13) * Math.sin(t * 3.1);
+      ctx.save();
+      ctx.beginPath(); ctx.roundRect(240, 180, 196, 290, 14); ctx.clip();
+      ctx.fillStyle = "rgba(0,0,0,.14)";
+      for (let y = 180; y < 470; y += 3) ctx.fillRect(240, y, 196, 1);
+      ctx.globalCompositeOperation = "lighter";
+      scanBand(ctx, t, 240, 180, 196, 290, "rgba(150,255,225,A)", 55, .16);
+      ctx.fillStyle = `rgba(110,255,210,${.025 + .03 * flick})`; ctx.fillRect(240, 180, 196, 290);
+      if (Math.floor(t * 1.8) % 2 === 0) { ctx.fillStyle = "rgba(170,255,200,.9)"; ctx.fillRect(312, 452, 8, 11); }
+      ctx.restore();
+      ctx.save();
+      ctx.beginPath(); ctx.moveTo(50, 186); ctx.lineTo(192, 206); ctx.lineTo(192, 606); ctx.lineTo(52, 640); ctx.closePath(); ctx.clip();
+      ctx.globalCompositeOperation = "lighter";
+      scanBand(ctx, t + 3, 50, 186, 142, 454, "rgba(120,255,200,A)", 70, .1);
+      ctx.restore();
+      ctx.globalCompositeOperation = "lighter";
+      glow(ctx, 338, 325, 300, "rgba(90,220,255,A)", .05 + .05 * flick);
+      glow(ctx, 870, 230, 190, "rgba(90,220,255,A)", .03 + .04 * flick);
+      glow(ctx, 1365, 225, 120, "rgba(255,190,110,A)", .12 + .04 * Math.sin(t * .8));
+      for (const l of s.lights) glow(ctx, l.x, l.y, l.r * 3, "rgba(255,220,150,A)", .25 + .35 * Math.sin(t * l.s + l.p));
+      moveDrift(s.motes, dt, 260, 720, 140, 470);
+      for (const m of s.motes) glow(ctx, m.x, m.y, m.r * 2.5, "rgba(150,230,255,A)", .25 + .2 * Math.sin(t + m.p));
+    },
+  },
+  // 4 · overpass: data pulses racing to the vanishing point, IoT pings, twinkling stars
+  {
+    init() {
+      return {
+        stars: twinklers(60, 0, 1376, 0, 260),
+        lanes: [[[-10, 700], [745, 405]], [[110, 768], [752, 405]], [[330, 768], [760, 405]], [[30, 560], [740, 400]]],
+        pulses: [], acc: 0,
+        pins: [[152, 700], [272, 582], [348, 596], [462, 642], [565, 548], [640, 568], [738, 508], [512, 502]],
+        orbs: drift(10, 0, 700, 300, 600, 7),
+      };
+    },
+    draw(ctx, s, t, dt) {
+      ctx.globalCompositeOperation = "lighter";
+      for (const st of s.stars) {
+        const a = .15 + .55 * Math.max(0, Math.sin(t * st.s + st.p));
+        ctx.fillStyle = `rgba(220,240,255,${a})`; ctx.beginPath(); ctx.arc(st.x, st.y, st.r * .8, 0, TAU); ctx.fill();
+      }
+      s.acc += dt;
+      while (s.acc > .28) { s.acc -= .28; s.pulses.push({ lane: Math.floor(rand(0, s.lanes.length)), k: 0, v: rand(.22, .4), c: Math.random() < .7 ? "80,220,255" : "255,200,90" }); }
+      s.pulses = s.pulses.filter(p => (p.k += p.v * dt) < 1);
+      for (const p of s.pulses) {
+        const [[x0, y0], [x1, y1]] = s.lanes[p.lane];
+        const head = p.k, tail = Math.max(0, p.k - .12);
+        const hx = x0 + (x1 - x0) * head, hy = y0 + (y1 - y0) * head;
+        const tx = x0 + (x1 - x0) * tail, ty = y0 + (y1 - y0) * tail;
+        const size = 1 - head * .85;
+        const g = ctx.createLinearGradient(tx, ty, hx, hy);
+        g.addColorStop(0, `rgba(${p.c},0)`); g.addColorStop(1, `rgba(${p.c},.95)`);
+        ctx.strokeStyle = g; ctx.lineWidth = 4 * size; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+        glow(ctx, hx, hy, 14 * size + 3, `rgba(${p.c},A)`, .6);
+      }
+      s.pins.forEach(([x, y], i) => ring(ctx, x, y, t * .55 + i * .37, i % 3 === 2 ? "rgba(255,210,100,A)" : "rgba(90,230,255,A)"));
+      moveDrift(s.orbs, dt, 0, 700, 300, 600);
+      for (const o of s.orbs) glow(ctx, o.x, o.y, 16 + o.r * 4, "rgba(90,220,255,A)", .12 + .08 * Math.sin(t + o.p));
+      const fl = .18 + .1 * Math.sin(t * 1.3);
+      for (const [x, y] of [[1376, 292], [96, 294]]) {
+        const g = ctx.createLinearGradient(x - 260, y, x + 260, y);
+        g.addColorStop(0, "rgba(120,200,255,0)"); g.addColorStop(.5, `rgba(160,220,255,${fl})`); g.addColorStop(1, "rgba(120,200,255,0)");
+        ctx.fillStyle = g; ctx.fillRect(x - 260, y - 2, 520, 4);
+      }
+    },
+  },
+  // 5 · ICBC office: sunset glow, highway light trails, analytics panels scanning, heat-map hotspots
+  {
+    init() {
+      return {
+        lights: twinklers(30, 0, 400, 230, 640),
+        trail: [[150, 640], [230, 600], [300, 585], [370, 560], [420, 520]],
+        cars: Array.from({ length: 10 }, () => ({ k: Math.random(), v: rand(.08, .16), c: Math.random() < .6 ? "255,210,140" : "255,110,90" })),
+        motes: drift(30, 780, 1376, 60, 640, 8),
+      };
+    },
+    draw(ctx, s, t, dt) {
+      ctx.globalCompositeOperation = "lighter";
+      const sun = .5 + .5 * Math.sin(t * .9);
+      glow(ctx, 215, 470, 230, "rgba(255,180,120,A)", .12 + .08 * sun);
+      glow(ctx, 215, 470, 60, "rgba(255,235,190,A)", .25 + .15 * sun);
+      for (const l of s.lights) glow(ctx, l.x, l.y, l.r * 2.5, "rgba(255,215,160,A)", .15 + .3 * Math.sin(t * l.s + l.p));
+      const tr = s.trail, segs = tr.length - 1;
+      for (const c of s.cars) {
+        c.k = (c.k + c.v * dt) % 1;
+        const f = c.k * segs, i = Math.floor(f), u = f - i;
+        const x = tr[i][0] + (tr[i + 1][0] - tr[i][0]) * u, y = tr[i][1] + (tr[i + 1][1] - tr[i][1]) * u;
+        glow(ctx, x, y, 9 - c.k * 5, `rgba(${c.c},A)`, .8);
+      }
+      ctx.save();
+      ctx.beginPath(); ctx.rect(815, 100, 190, 320); ctx.rect(1015, 90, 361, 320); ctx.rect(900, 425, 400, 170); ctx.clip();
+      scanBand(ctx, t, 815, 90, 561, 505, "rgba(140,235,255,A)", 80, .14);
+      ctx.restore();
+      ring(ctx, 1150, 325, t * .6, "rgba(255,120,90,A)");
+      ring(ctx, 1040, 508, t * .6 + .5, "rgba(255,140,90,A)");
+      glow(ctx, 1150, 325, 34, "rgba(255,90,60,A)", .3 + .2 * Math.sin(t * 2.6));
+      glow(ctx, 1040, 508, 26, "rgba(255,110,70,A)", .3 + .2 * Math.sin(t * 2.6 + 1));
+      ring(ctx, 1028, 362, t * .8, "rgba(140,235,255,A)");
+      glow(ctx, 900, 735, 160, "rgba(110,220,255,A)", .1 + .06 * Math.sin(t * 1.7));
+      moveDrift(s.motes, dt, 780, 1376, 60, 640);
+      for (const m of s.motes) glow(ctx, m.x, m.y, m.r * 2.5, "rgba(140,230,255,A)", .2 + .2 * Math.sin(t * 1.4 + m.p));
+    },
+  },
+  // 6 · Douglas College classroom: sunrise through the window, live code on the board, pen sparkles, sign glint
+  {
+    init() { return { motes: drift(40, 0, 1376, 60, 720, 7), sparks: [], acc: 0 }; },
+    draw(ctx, s, t, dt) {
+      ctx.globalCompositeOperation = "lighter";
+      const sun = .5 + .5 * Math.sin(t * .8);
+      glow(ctx, 228, 250, 260, "rgba(255,200,140,A)", .1 + .07 * sun);
+      glow(ctx, 228, 250, 55, "rgba(255,240,200,A)", .25 + .15 * sun);
+      ctx.save();
+      ctx.beginPath(); ctx.rect(842, 38, 522, 400); ctx.clip();
+      scanBand(ctx, t, 842, 38, 522, 400, "rgba(150,220,255,A)", 60, .12);
+      ctx.restore();
+      glow(ctx, 1100, 240, 300, "rgba(110,200,255,A)", .05 + .03 * Math.sin(t * 1.6));
+      for (const [x, y, i] of [[1210, 120, 0], [1265, 140, 1], [1320, 160, 2], [1215, 400, 3], [1270, 410, 4], [1320, 420, 5]])
+        glow(ctx, x, y, 16, "rgba(255,190,110,A)", .25 + .3 * Math.sin(t * 2.4 + i));
+      const gx = 880 + ((t * 260) % 1400);
+      if (gx < 1280) {
+        ctx.save();
+        ctx.beginPath(); ctx.rect(905, 0, 345, 64); ctx.clip();
+        const g = ctx.createLinearGradient(gx - 40, 0, gx + 40, 0);
+        g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.5, "rgba(255,255,255,.35)"); g.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = g; ctx.fillRect(gx - 40, 0, 80, 64);
+        ctx.restore();
+      }
+      s.acc += dt;
+      while (s.acc > .08) { s.acc -= .08; s.sparks.push({ x: 1010 + rand(-6, 6), y: 522 + rand(-6, 6), vx: rand(-20, 30), vy: rand(-40, -5), life: 0, max: rand(.8, 1.6), p: rand(0, TAU) }); }
+      s.sparks = s.sparks.filter(k => (k.life += dt) < k.max);
+      for (const k of s.sparks) {
+        k.x += k.vx * dt; k.y += k.vy * dt;
+        const a = Math.sin(Math.PI * k.life / k.max);
+        glow(ctx, k.x, k.y, 5, "rgba(150,230,255,A)", a * .7);
+      }
+      glow(ctx, 1010, 522, 18, "rgba(160,235,255,A)", .35 + .25 * Math.sin(t * 4));
+      moveDrift(s.motes, dt, 0, 1376, 60, 720);
+      for (const m of s.motes) glow(ctx, m.x, m.y, m.r * 2.5, "rgba(255,235,190,A)", .2 + .2 * Math.sin(t * 1.3 + m.p));
+    },
+  },
+  // 7 · lab: hologram shimmer, freight routes pulsing, fingertip nodes, floating particles
+  {
+    init() {
+      return {
+        motes: drift(55, 0, 1376, 0, 768, 10),
+        routes: [[[372, 470], [900, 395]], [[372, 540], [900, 470]], [[520, 345], [700, 630]], [[372, 610], [905, 560]]],
+        dots: Array.from({ length: 14 }, (_, i) => ({ r: i % 4, k: Math.random(), v: rand(.12, .25) })),
+      };
+    },
+    draw(ctx, s, t, dt) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(356, 338, 549, 298); ctx.clip();
+      ctx.globalCompositeOperation = "lighter";
+      const sx = 300 + ((t * 170) % 1000);
+      const g = ctx.createLinearGradient(sx - 120, 0, sx + 120, 0);
+      g.addColorStop(0, "rgba(140,230,255,0)"); g.addColorStop(.5, "rgba(170,240,255,.2)"); g.addColorStop(1, "rgba(140,230,255,0)");
+      ctx.fillStyle = g; ctx.fillRect(356, 338, 549, 298);
+      ctx.fillStyle = "rgba(160,235,255,.05)";
+      for (let y = 338; y < 636; y += 4) ctx.fillRect(356, y, 549, 1);
+      for (const d of s.dots) {
+        d.k = (d.k + d.v * dt) % 1;
+        const [[x0, y0], [x1, y1]] = s.routes[d.r];
+        const x = x0 + (x1 - x0) * d.k, y = y0 + (y1 - y0) * d.k;
+        glow(ctx, x, y, 12, "rgba(255,210,110,A)", .8);
+      }
+      ctx.restore();
+      ctx.globalCompositeOperation = "lighter";
+      const edge = .25 + .15 * Math.sin(t * 2.2);
+      ctx.strokeStyle = `rgba(130,230,255,${edge})`; ctx.lineWidth = 3; ctx.strokeRect(356, 338, 549, 298);
+      ring(ctx, 383, 363, t * .7, "rgba(255,220,120,A)");
+      ring(ctx, 1012, 513, t * .7 + .5, "rgba(120,230,255,A)");
+      glow(ctx, 383, 363, 40, "rgba(255,220,130,A)", .35 + .2 * Math.sin(t * 3));
+      glow(ctx, 1012, 513, 40, "rgba(130,230,255,A)", .35 + .2 * Math.sin(t * 3 + 1));
+      for (const [x, y, i] of [[208, 212, 0], [208, 240, 1], [208, 268, 2], [208, 297, 3], [672, 409, 4]])
+        glow(ctx, x, y, 14, "rgba(120,230,255,A)", .3 + .3 * Math.sin(t * 2.5 + i));
+      moveDrift(s.motes, dt, 0, 1376, 0, 768);
+      s.motes.forEach((m, i) => glow(ctx, m.x, m.y, m.r * 3, i % 3 ? "rgba(120,220,255,A)" : "rgba(190,140,255,A)", .25 + .2 * Math.sin(t * 1.5 + m.p)));
+    },
+  },
+  // 8 · classroom: wrench glow, sparkles flowing to the student, code screen scan
+  {
+    init() { return { sparks: [], acc: 0, bokeh: drift(14, 0, 330, 60, 700, 6), lights: twinklers(14, 1090, 1376, 170, 430) }; },
+    draw(ctx, s, t, dt) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(95, 0, 725, 610); ctx.clip();
+      ctx.globalCompositeOperation = "lighter";
+      scanBand(ctx, t, 95, 0, 725, 610, "rgba(255,190,120,A)", 70, .09);
+      ctx.restore();
+      ctx.globalCompositeOperation = "lighter";
+      for (const l of s.lights) glow(ctx, l.x, l.y, l.r * 3, "rgba(200,225,255,A)", .2 + .3 * Math.sin(t * l.s + l.p));
+      moveDrift(s.bokeh, dt, 0, 330, 60, 700);
+      for (const b of s.bokeh) glow(ctx, b.x, b.y, 10 + b.r * 4, "rgba(255,170,90,A)", .15 + .1 * Math.sin(t + b.p));
+      const pulse = .5 + .5 * Math.sin(t * 2.4);
+      glow(ctx, 805, 470, 120, "rgba(100,230,255,A)", .18 + .14 * pulse);
+      glow(ctx, 855, 440, 46, "rgba(180,245,255,A)", .3 + .25 * pulse);
+      s.acc += dt;
+      while (s.acc > .05) {
+        s.acc -= .05;
+        s.sparks.push({ x: rand(820, 880), y: rand(420, 470), vx: rand(40, 110), vy: rand(-25, 45), p: rand(0, TAU), life: 0, max: rand(1.4, 2.8), sz: rand(2, 5) });
+      }
+      s.sparks = s.sparks.filter(k => (k.life += dt) < k.max);
+      for (const k of s.sparks) {
+        k.x += k.vx * dt; k.y += (k.vy + Math.sin(t * 4 + k.p) * 20) * dt;
+        const a = Math.sin(Math.PI * k.life / k.max) * (.6 + .4 * Math.sin(t * 15 + k.p));
+        const z = k.sz * (1 - k.life / k.max * .5);
+        ctx.strokeStyle = `rgba(200,250,255,${a})`; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(k.x - z, k.y); ctx.lineTo(k.x + z, k.y); ctx.moveTo(k.x, k.y - z); ctx.lineTo(k.x, k.y + z); ctx.stroke();
+        glow(ctx, k.x, k.y, z * 2.2, "rgba(110,230,255,A)", a * .5);
+      }
+    },
+  },
+];
+
+/* ---------- HUD life for the detail slides, drawn in slide pixels (1600×900) ---------- */
+function packet(ctx, x0, y0, x1, y1, k, color) {
+  const x = x0 + (x1 - x0) * k, y = y0 + (y1 - y0) * k;
+  glow(ctx, x, y, 10, color, .9);
+  ctx.fillStyle = color.replace("A", .95); ctx.beginPath(); ctx.arc(x, y, 2.4, 0, TAU); ctx.fill();
+}
+function hudBase(ctx, t) {
+  ctx.globalCompositeOperation = "lighter";
+  scanBand(ctx, t, 0, 0, DW, DH, "rgba(56,216,255,A)", 90, .035);
+  glow(ctx, 87, 46, 12, "rgba(56,216,255,A)", .4 + .4 * Math.sin(t * 4));
+}
+function cursor(ctx, t, x, y, h, color) {
+  if (Math.floor(t * 1.8) % 2 === 0) { ctx.fillStyle = color; ctx.fillRect(x, y - h, 9, h); }
+}
+const HUDS = [
+  // ICBC: telemetry packets flow from hubs into the core risk engine, rack lights blink
+  {
+    init() { return {}; },
+    draw(ctx, s, t) {
+      hudBase(ctx, t);
+      const p = .5 + .5 * Math.sin(t * 2.2);
+      glow(ctx, 1160, 365, 120, "rgba(56,216,255,A)", .12 + .12 * p);
+      glow(ctx, 1160, 365, 22, "rgba(180,245,255,A)", .5 + .4 * p);
+      ring(ctx, 1160, 365, t * .5, "rgba(56,216,255,A)");
+      for (let i = 0; i < 3; i++) {
+        packet(ctx, 893, 676, 1100, 425, (t * .45 + i / 3) % 1, "rgba(56,216,255,A)");
+        packet(ctx, 1286, 676, 1205, 440, (t * .38 + i / 3) % 1, "rgba(170,130,255,A)");
+      }
+      [247, 278, 308, 338, 368].forEach((y, i) => {
+        glow(ctx, 866, y, 9, "rgba(120,255,200,A)", Math.max(0, Math.sin(t * 3 + i * 1.7)) * .7);
+        glow(ctx, 1455, y, 9, "rgba(56,216,255,A)", Math.max(0, Math.sin(t * 2.6 + i * 2.1)) * .7);
+      });
+      ring(ctx, 893, 676, t * .5 + .3, "rgba(56,216,255,A)");
+      ring(ctx, 1286, 676, t * .5 + .8, "rgba(170,130,255,A)");
+    },
+  },
+  // InfraLogics PINN: a forward pass ripples through the network into the physics box
+  {
+    init() { return {}; },
+    draw(ctx, s, t) {
+      hudBase(ctx, t);
+      ctx.translate(0, 138); // diagram is centred on the page, 138 units below its original spot
+      const layers = [[[893, 213], [893, 313], [893, 413]], [[1043, 180], [1043, 266], [1043, 352], [1043, 438]], [[1203, 230], [1203, 340], [1203, 428]]];
+      const wave = (t * .7) % 1.4;
+      layers.forEach((layer, li) => {
+        const a = Math.max(0, 1 - Math.abs(wave - li * .35) * 3.5);
+        layer.forEach(([x, y]) => glow(ctx, x, y, 30, "rgba(56,216,255,A)", .15 + .6 * a));
+      });
+      const boxA = Math.max(0, 1 - Math.abs(wave - 1.1) * 3.5);
+      for (const [x, y] of [[1383, 200], [1270, 340], [1383, 430]]) glow(ctx, x, y, 16, "rgba(255,194,61,A)", .3 + .6 * boxA);
+      glow(ctx, 1383, 315, 150, "rgba(255,194,61,A)", .04 + .1 * boxA);
+    },
+  },
+  // Games: the twin mesh takes its load, sensor nodes ping, the use-case tiles light in turn
+  {
+    init() { return {}; },
+    draw(ctx, s, t) {
+      hudBase(ctx, t);
+      const tiles = [[980, 166], [1342, 166], [980, 318], [1342, 318]];
+      const lit = Math.floor(t / 1.6) % 4;
+      tiles.forEach(([x, y], i) => glow(ctx, x, y, 170, "rgba(56,216,255,A)", i === lit ? .07 : 0));
+      const p = .5 + .5 * Math.sin(t * 3);
+      glow(ctx, 1160, 512, 26, "rgba(255,194,61,A)", .4 + .4 * p);
+      packet(ctx, 1160, 520, 1160, 628, (t * .6) % 1, "rgba(255,194,61,A)");
+      ring(ctx, 1013, 621, t * .6, "rgba(56,216,255,A)");
+      ring(ctx, 1306, 621, t * .6 + .5, "rgba(60,230,150,A)");
+      glow(ctx, 1160, 620, 170, "rgba(56,216,255,A)", .04 + .04 * p);
+    },
+  },
+  // P.Eng: the seal turns, signals run in from the digital and physical sides
+  {
+    init() { return {}; },
+    draw(ctx, s, t) {
+      hudBase(ctx, t);
+      ctx.translate(0, 131); // diagram is centred on the page, 131 units below its original spot
+      ctx.save();
+      ctx.translate(1160, 310);
+      ctx.lineWidth = 2; ctx.setLineDash([14, 18]);
+      ctx.rotate(t * .25); ctx.strokeStyle = "rgba(56,216,255,.45)"; ctx.beginPath(); ctx.arc(0, 0, 150, 0, TAU); ctx.stroke();
+      ctx.rotate(-t * .55); ctx.strokeStyle = "rgba(255,194,61,.4)"; ctx.beginPath(); ctx.arc(0, 0, 196, 0, TAU); ctx.stroke();
+      ctx.restore();
+      const p = .5 + .5 * Math.sin(t * 2);
+      glow(ctx, 1160, 310, 60, "rgba(255,230,160,A)", .25 + .3 * p);
+      glow(ctx, 1160, 310, 230, "rgba(255,194,61,A)", .04 + .06 * p);
+      for (let i = 0; i < 2; i++) {
+        const k = (t * .4 + i / 2) % 1;
+        packet(ctx, 850, 310, 1062, 310, k, "rgba(56,216,255,A)");
+        packet(ctx, 1470, 310, 1258, 310, k, "rgba(255,194,61,A)");
+      }
+    },
+  },
+];
+const FX = SLIDES.map(sl => sl.doc ? HUDS[sl.hud] : EFFECTS[sl.fx]);
+
+/* ---------- build slides ---------- */
+const stage = document.getElementById("stage");
+const els = SLIDES.map((sl, i) => {
+  const el = document.createElement("section");
+  el.className = sl.doc ? "slide doc" : "slide"; el.setAttribute("aria-label", `Slide ${i + 1} of ${SLIDES.length}: ${sl.title}`);
+  el.innerHTML = sl.doc
+    ? `<div class="backdrop"></div>
+    <div class="frame"><div class="kb">${DOCS[sl.doc]}<canvas></canvas></div><div class="scan"></div></div>`
+    : `<div class="backdrop" style="background-image:url('${sl.img.replace(/^img\/(\w+)\.webp.*/, "img/bg/$1.jpg")}')"></div>
+    <div class="frame"><div class="kb" style="transform-origin:${sl.portal[0] * 100}% ${sl.portal[1] * 100}%">
+      <img src="${sl.img}" alt="" ${i ? 'loading="eager"' : ""}><canvas></canvas></div><div class="vignette"></div></div>`;
+  stage.prepend(el);
+  return el;
+});
+const canvases = els.map(el => el.querySelector("canvas"));
+const states = FX.map(e => e.init());
+
+function sizeCanvases() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  canvases.forEach((c, i) => {
+    const [w0, h0] = dims(SLIDES[i]);
+    const w = c.clientWidth || c.parentElement.clientWidth;
+    c.width = Math.round(w * dpr); c.height = Math.round(w * dpr * h0 / w0);
+  });
+}
+addEventListener("resize", sizeCanvases);
+
+/* ---------- navigation ---------- */
+let cur = 0, busy = false;
+const progress = document.getElementById("progress");
+SLIDES.forEach((sl, i) => {
+  const b = document.createElement("button");
+  b.dataset.sub = sl.doc ? "sub" : "";
+  b.setAttribute("aria-label", `Go to slide ${i + 1}: ${sl.title}`);
+  b.onclick = () => go(i);
+  progress.append(b);
+});
+const caption = document.getElementById("caption");
+
+function setCaption(i) {
+  const sl = SLIDES[i];
+  stage.style.setProperty("--accent", sl.accent);
+  caption.classList.toggle("away", !!sl.doc);
+  if (!sl.doc) {
+    document.getElementById("kicker").textContent = `${String(i + 1).padStart(2, "0")} / ${String(SLIDES.length).padStart(2, "0")} · ${sl.kicker}`;
+    document.getElementById("title").innerHTML = sl.title.split(" ").map((w, k) => `<span class="w" style="--i:${k}">${w.replace(/&/g, "&amp;")}</span>`).join(" ");
+    document.getElementById("lesson").textContent = sl.lesson;
+    caption.classList.remove("in"); void caption.offsetWidth; caption.classList.add("in");
+  }
+  document.getElementById("count").innerHTML = `<b>${i + 1}</b> / ${SLIDES.length}`;
+  [...progress.children].forEach((b, k) => { b.className = `${k < i ? "done" : k === i ? "cur" : ""} ${b.dataset.sub}`; b.toggleAttribute("aria-current", k === i); });
+  document.getElementById("prev").disabled = i === 0;
+  document.getElementById("next").disabled = i === SLIDES.length - 1;
+}
+
+function go(n) {
+  if (busy || n === cur || n < 0 || n >= SLIDES.length) return;
+  document.getElementById("hint").classList.add("gone");
+  const out = els[cur], inn = els[n], fwd = n > cur;
+  const from = SLIDES[cur], to = SLIDES[n];
+  busy = true;
+  inn.classList.add("on");
+  const dur = reduce ? 450 : 1500, easing = "cubic-bezier(.65,0,.3,1)";
+  let aOut, aIn;
+  const origin = sl => `${sl.portal[0] * 100}% ${sl.portal[1] * 100}%`;
+  if (reduce) {
+    aOut = out.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur });
+    aIn = inn.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur });
+  } else if (from.doc || to.doc) {
+    // into a detail page: the scene dives into its focal point and cools to the HUD's cyan
+    if (!from.doc) {
+      out.style.transformOrigin = origin(from);
+      aOut = out.animate(fwd
+        ? [{ transform: "scale(1)", opacity: 1, filter: "saturate(1)" }, { transform: "scale(2.8)", opacity: 0, filter: "saturate(.2) hue-rotate(160deg) brightness(.6)" }]
+        : [{ transform: "scale(1)", opacity: 1, filter: "brightness(1)" }, { transform: "scale(.55)", opacity: 0, filter: "brightness(.7)" }],
+        { duration: dur * .8, easing });
+    } else {
+      // out of a detail page: it powers down like a monitor, collapsing to a bright line
+      out.style.transformOrigin = "50% 50%";
+      aOut = out.animate([
+        { transform: "scale(1, 1)", opacity: 1, filter: "brightness(1)" },
+        { offset: .45, transform: "scale(1, .006)", opacity: 1, filter: "brightness(2.6)" },
+        { transform: "scale(0, .006)", opacity: 0, filter: "brightness(3)" },
+      ], { duration: dur * .6, easing: "cubic-bezier(.5,0,.75,0)" });
+    }
+    if (to.doc) {
+      // the detail page boots in behind a scan line sweeping down the screen
+      inn.style.transformOrigin = origin(to);
+      const delay = from.doc ? dur * .5 : dur * .45;
+      aIn = inn.animate([
+        { clipPath: "inset(0 0 100% 0)", transform: "scale(1.04)", filter: "brightness(1.8)" },
+        { clipPath: "inset(0 0 0% 0)", transform: "scale(1)", filter: "brightness(1)" },
+      ], { duration: dur * .75, delay, easing: "cubic-bezier(.3,0,.2,1)", fill: "backwards" });
+      inn.querySelector(".scan").animate([
+        { top: "0%", opacity: 1 }, { offset: .9, top: "100%", opacity: 1 }, { top: "100%", opacity: 0 },
+      ], { duration: dur * .75, delay, easing: "cubic-bezier(.3,0,.2,1)" });
+    } else {
+      // back to a scene: it zooms up out of its focal point, as between scenes
+      inn.style.transformOrigin = fwd ? "50% 50%" : origin(to);
+      aIn = inn.animate(fwd
+        ? [{ transform: "scale(.55)", opacity: 0, filter: "brightness(.7)" }, { transform: "scale(1)", opacity: 1, filter: "brightness(1)" }]
+        : [{ transform: "scale(4)", opacity: 0, filter: "brightness(1.6)" }, { transform: "scale(1)", opacity: 1, filter: "brightness(1)" }],
+        { duration: dur, delay: dur * .4, easing, fill: "backwards" });
+    }
+  } else if (fwd) {
+    // push through the current scene's focal point and keep zooming into the next one
+    out.style.transformOrigin = `${from.portal[0] * 100}% ${from.portal[1] * 100}%`;
+    inn.style.transformOrigin = "50% 50%";
+    aOut = out.animate([{ transform: "scale(1)", opacity: 1, filter: "brightness(1)" }, { transform: "scale(4)", opacity: 0, filter: "brightness(1.6)" }], { duration: dur, easing });
+    aIn = inn.animate([{ transform: "scale(.55)", opacity: 0, filter: "brightness(.7)" }, { transform: "scale(1)", opacity: 1, filter: "brightness(1)" }], { duration: dur, easing, delay: dur * .18 });
+  } else {
+    // pull back out of the previous scene's focal point
+    inn.style.transformOrigin = `${to.portal[0] * 100}% ${to.portal[1] * 100}%`;
+    out.style.transformOrigin = "50% 50%";
+    aOut = out.animate([{ transform: "scale(1)", opacity: 1, filter: "brightness(1)" }, { transform: "scale(.55)", opacity: 0, filter: "brightness(.7)" }], { duration: dur, easing });
+    aIn = inn.animate([{ transform: "scale(4)", opacity: 0, filter: "brightness(1.6)" }, { transform: "scale(1)", opacity: 1, filter: "brightness(1)" }], { duration: dur, easing, delay: dur * .12, fill: "backwards" });
+  }
+  if (!reduce && fwd && !from.doc && !to.doc) aIn.effect.updateTiming({ fill: "backwards" });
+  // hold the outgoing slide at its end state, then retire it, so it never snaps back into view
+  aOut.effect.updateTiming({ fill: "forwards" });
+  aOut.finished.then(() => { out.classList.remove("on"); aOut.cancel(); });
+  setTimeout(() => setCaption(n), dur * .45);
+  Promise.all([aOut.finished, aIn.finished]).then(() => { cur = n; busy = false; });
+  cur = n;
+}
+
+addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+  if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  if (e.key === "Home") go(0);
+  if (e.key === "End") go(SLIDES.length - 1);
+  if (e.key === "f") toggleFs();
+});
+document.getElementById("next").onclick = () => go(cur + 1);
+document.getElementById("prev").onclick = () => go(cur - 1);
+stage.addEventListener("click", e => {
+  if (e.target.closest("button, a")) return;
+  go(e.clientX > innerWidth / 3 ? cur + 1 : cur - 1);
+});
+let tx = null;
+stage.addEventListener("touchstart", e => { tx = e.touches[0].clientX; }, { passive: true });
+stage.addEventListener("touchend", e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx; tx = null;
+  if (Math.abs(dx) > 40) { go(dx < 0 ? cur + 1 : cur - 1); }
+});
+function toggleFs() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+  } catch (_) {}
+}
+document.getElementById("fs").onclick = toggleFs;
+
+/* ---------- render loop ---------- */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const t = now / 1000;
+  els.forEach((el, i) => {
+    if (!el.classList.contains("on")) return;
+    const c = canvases[i], ctx = c.getContext("2d");
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0, 0, c.width, c.height);
+    const k = c.width / dims(SLIDES[i])[0];
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    FX[i].draw(ctx, states[i], t, dt);
+  });
+  requestAnimationFrame(frame);
+}
+
+els[0].classList.add("on");
+setCaption(0);
+sizeCanvases();
+if (!reduce) requestAnimationFrame(frame);
+</script>
